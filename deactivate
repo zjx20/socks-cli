@@ -1,0 +1,13 @@
+
+if [ "${_socks_git}" = "1" ]; then
+	[ ! -z "${_socks_git_GIT_PROXY_COMMAND+defined}" ] && export GIT_PROXY_COMMAND="${_socks_git_GIT_PROXY_COMMAND}"
+	[ ! -z "${_socks_git_GIT_SSH+defined}" ]           && export GIT_SSH="${_socks_git_GIT_SSH}"
+	[ ! -z "${_socks_git_ALL_PROXY+defined}" ]         && export ALL_PROXY="${_socks_git_ALL_PROXY}"
+	[ ! -z "${_socks_git_PS1+defined}" ]               && export PS1="${_socks_git_PS1}"
+
+	unset _socks_git
+	unset _socks_git_GIT_PROXY_COMMAND
+	unset _socks_git_GIT_SSH
+	unset _socks_git_ALL_PROXY
+	unset _socks_git_PS1
+fi

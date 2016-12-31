@@ -1,0 +1,2 @@
+Repo: https://bitbucket.org/gotoh/connect
+Commit: 2e080df38b35a529f51d8dd13569816f145d14d8

@@ -1,0 +1,9 @@
+syntax: glob
+*~
+*.obj
+*.o
+*.exe
+*.zip
+connect
+version
+

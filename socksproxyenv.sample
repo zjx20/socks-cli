@@ -1,0 +1,22 @@
+###############################################################################
+#
+#  "socksproxyenv" is a script to export the SOCKS_PROXY env var.
+#  Please keep in mind that this script will NOT be executed directly. Instead,
+#  it will be evaluated by "source" command.
+#
+#  You can just export your socks5 server as simple as:
+#
+#    export SOCKS_PROXY="localhost:1080"
+#
+#  Alternatively, you can also do something complex, for example:
+#
+#    # Create a ssh tunnel on the fly
+#    PORT=1088
+#    if [ $(netstat -an | grep ${PORT} | grep LISTEN | wc -l) = "0" ]; then
+#      ssh -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -f -N -D ${PORT} user@your_server
+#    fi
+#    export SOCKS_PROXY="localhost:${PORT}"
+#
+
+export SOCKS_PROXY=
+
