@@ -1,5 +1,10 @@
 
-CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# If the script itself is evaluated by `source`, when executing `cd` in a subshell
+# under the Terminal.app on macOS 10.11+, some unexpected output will pop up.
+# So we override the shell_session_update function in order to suppress the garbage.
+# Dig into /etc/bashrc_Apple_Terminal for more details.
+CURRENT_DIR="$( shell_session_update() { :; }; cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 source "${CURRENT_DIR}/socksproxyenv"
 if [ "${SOCKS_PROXY}" = "" ]; then
     echo "Error: 'socksproxyenv' didn't provide the SOCKS_PROXY env var!"
