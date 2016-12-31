@@ -12,8 +12,10 @@ Simple scripts to make socks5 work for git.
 3. Call `source socks-git/activate` before your git command:
 	```
 	$ source socks-git/activate
-	Overrided GIT_PROXY_COMMAND, GIT_SSH and ALL_PROXY env in order to
-	use localhost:1088 as the proxy server for git command!
+	Done! Some environment variables have been changed to:
+	  GIT_SSH=/Users/x/socks-git/socks5proxyssh
+	  ALL_PROXY=socks5h://localhost:1080
+	  GIT_PROXY_COMMAND=/Users/x/socks-git/socks5proxywrapper
 
 	$ git clone git@github.com:git/git.git
 	Cloning into 'git'...
