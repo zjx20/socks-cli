@@ -21,7 +21,13 @@ else
     export _socks_git_PS1="$PS1"
 
     # Prompt that socks-git is activated
-    export PS1="\033[0;32msocks-git\033[0m $PS1"
+    PS1_PREFIX=$'\e[0;32msocks-git\e[0m '
+    if [ ! -z "$BASH" ]; then
+        # Bash needs \[ and \] to surround non-printing characters:
+        #   http://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
+        PS1_PREFIX=$'\[\e[0;32m\]socks-git\[\e[0m\] '
+    fi
+    export PS1=$PS1_PREFIX$PS1
 
     BEFORE_ENV="$(env)"
 
