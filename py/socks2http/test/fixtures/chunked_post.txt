@@ -1,0 +1,11 @@
+POST http://127.0.0.1:4567/ HTTP/1.1
+User-Agent: Profile/MIDP-2.0 Configuration/CLDC-1.1
+Host: 127.0.0.1
+Transfer-Encoding: chunked
+
+6
+Hello_
+5
+World
+0
+
