@@ -14,11 +14,17 @@ else
         source "${CURRENT_DIR}/deactivate"
     fi
 
-    export _socks_git=1
-    export _socks_git_GIT_PROXY_COMMAND="${GIT_PROXY_COMMAND}"
-    export _socks_git_GIT_SSH="${GIT_SSH}"
-    export _socks_git_ALL_PROXY="${ALL_PROXY}"
-    export _socks_git_PS1="$PS1"
+    function save_var() {
+        if [ -n "$1" ]; then
+            [ -n "${!1+x}" ] && echo "_socks_git_$1=\"\${$1}\""
+        fi
+    }
+
+    _socks_git=1
+    eval "$(save_var GIT_PROXY_COMMAND)"
+    eval "$(save_var GIT_SSH)"
+    eval "$(save_var ALL_PROXY)"
+    eval "$(save_var PS1)"
 
     # Prompt that socks-git is activated
     PS1_PREFIX=$'\e[0;32msocks-git\e[0m '
