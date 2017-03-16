@@ -10,6 +10,7 @@ import socket
 import select
 import time
 import errno
+
 from urlparse import urlparse
 from SocketServer import ThreadingMixIn, TCPServer
 from BaseHTTPServer import BaseHTTPRequestHandler
@@ -441,8 +442,7 @@ def runProxyServer(config):
     global DEBUG_MODE
     DEBUG_MODE = config.debug
     if config.socks5_server:
-        SOCKS5_PROXY = config.socks5_server.split(":")
-        assert len(SOCKS5_PROXY) == 2
+        SOCKS5_PROXY = (config.socks5_server.split(":") + ["1080"])[:2]
         SOCKS5_PROXY[1] = int(SOCKS5_PROXY[1])
         socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, *SOCKS5_PROXY)
 
