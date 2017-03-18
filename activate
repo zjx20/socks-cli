@@ -38,9 +38,9 @@ else
     BEFORE_ENV="$(env)"
 
     # For "git" protocol
-    export GIT_PROXY_COMMAND="${CURRENT_DIR}/socks5proxywrapper" 
+    export GIT_PROXY_COMMAND="${CURRENT_DIR}/sh/socksified-connect.sh"
     # For "ssh" protocol
-    export GIT_SSH="${CURRENT_DIR}/socks5proxyssh"
+    export GIT_SSH="${CURRENT_DIR}/sh/socksified-ssh.sh"
     # For "http/https" protocol
     export ALL_PROXY="socks5h://${SOCKS_PROXY}"
 

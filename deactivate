@@ -6,7 +6,8 @@ if [ "${_socks_git}" = "1" ]; then
 			if [ -n "${!VAR+x}" ]; then
 				echo "export $1=\"\${${VAR}}\"; unset ${VAR}"
 			else
-				# Check if the variable exists, for security
+				# Check if the variable really exists, for security.
+				# e.g. to avoid code injection or something else.
 				[ -n "${!1+x}" ] && echo "unset $1"
 			fi
 		fi
