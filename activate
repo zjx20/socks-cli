@@ -10,28 +10,28 @@ if [ "${SOCKS_PROXY}" = "" ]; then
     echo "Error: 'socksproxyenv' didn't provide the SOCKS_PROXY env var!"
 else
     # Reload
-    if [ "${_socks_git}" = "1" ]; then
+    if [ "${_socks_cli}" = "1" ]; then
         source "${CURRENT_DIR}/deactivate"
     fi
 
     function save_var() {
         if [ -n "$1" ]; then
-            [ -n "${!1+x}" ] && echo "_socks_git_$1=\"\${$1}\""
+            [ -n "${!1+x}" ] && echo "_socks_cli_$1=\"\${$1}\""
         fi
     }
 
-    _socks_git=1
+    _socks_cli=1
     eval "$(save_var GIT_PROXY_COMMAND)"
     eval "$(save_var GIT_SSH)"
     eval "$(save_var ALL_PROXY)"
     eval "$(save_var PS1)"
 
-    # Prompt that socks-git is activated
-    PS1_PREFIX=$'\e[0;32msocks-git\e[0m '
+    # Prompt that socks-cli is activated
+    PS1_PREFIX=$'\e[0;32msocks-cli\e[0m '
     if [ ! -z "$BASH" ]; then
         # Bash needs \[ and \] to surround non-printing characters:
         #   http://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
-        PS1_PREFIX=$'\[\e[0;32m\]socks-git\[\e[0m\] '
+        PS1_PREFIX=$'\[\e[0;32m\]socks-cli\[\e[0m\] '
     fi
     export PS1=$PS1_PREFIX$PS1
 

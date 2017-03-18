@@ -1,7 +1,15 @@
-socks-git
+socks-cli
 =========
 
-Simple scripts to make socks5 work for git.
+`socks-cli` is a tool to make CLI commands use the specified socks5 proxy, by setting up special environment variables, such as `ALL_PROXY`. It works on linux and macOS with bash and python2.7 installed.
+
+Here is a incomplete list of supported commands:
+
+* git
+* curl
+* brew
+* pod
+* ...
 
 ## Usage
 
@@ -9,13 +17,13 @@ Simple scripts to make socks5 work for git.
 
 2. Copy `socksproxyenv.sample` to `socksproxyenv`, and fill your socks5 server into it.
 
-3. Call `source socks-git/activate` before your git command:
+3. Call `source socks-cli/activate` before your CLI commands:
 	```
-	$ source socks-git/activate
+	$ source socks-cli/activate
 	Done! Some environment variables have been changed to:
-	  GIT_SSH=/Users/x/socks-git/socks5proxyssh
+	  GIT_SSH=/Users/x/socks-cli/socks5proxyssh
 	  ALL_PROXY=socks5h://localhost:1080
-	  GIT_PROXY_COMMAND=/Users/x/socks-git/socks5proxywrapper
+	  GIT_PROXY_COMMAND=/Users/x/socks-cli/socks5proxywrapper
 
 	$ git clone git@github.com:git/git.git
 	Cloning into 'git'...
@@ -25,8 +33,4 @@ Simple scripts to make socks5 work for git.
 	...
 	```
 
-4. Optionally, you can call `source socks-git/deactivate` to deactivate `socks-git`.
-
-## Side Effect
-
-Since `socks-git` uses the ALL_PROXY env to proxy http/https to socks5, other tools that support the ALL_PROXY env will be affected too.
+4. Optionally, you can call `source socks-cli/deactivate` to deactivate `socks-cli`.

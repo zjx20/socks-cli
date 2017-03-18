@@ -1,8 +1,8 @@
 
-if [ "${_socks_git}" = "1" ]; then
+if [ "${_socks_cli}" = "1" ]; then
 	function restore_var() {
 		if [ -n "$1" ]; then
-			local VAR="_socks_git_$1"
+			local VAR="_socks_cli_$1"
 			if [ -n "${!VAR+x}" ]; then
 				echo "export $1=\"\${${VAR}}\"; unset ${VAR}"
 			else
@@ -13,7 +13,7 @@ if [ "${_socks_git}" = "1" ]; then
 		fi
 	}
 
-	unset _socks_git
+	unset _socks_cli
 	eval "$(restore_var GIT_PROXY_COMMAND)"
 	eval "$(restore_var GIT_SSH)"
 	eval "$(restore_var ALL_PROXY)"
