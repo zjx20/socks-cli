@@ -13,10 +13,13 @@
 #    # Create a ssh tunnel on the fly
 #    PORT=1088
 #    if [ $(netstat -an | grep ${PORT} | grep LISTEN | wc -l) = "0" ]; then
-#      ssh -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -f -N -D ${PORT} user@your_server
+#      ssh -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" \
+#          -f -N -D ${PORT} user@your_server
 #    fi
 #    export SOCKS_PROXY="localhost:${PORT}"
 #
 
 export SOCKS_PROXY=
 
+# Uncomment this line if you don't want to use the built-in http proxy server
+# export SOCKS_CLI_DISABLE_HTTP_PROXY=1

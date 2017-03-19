@@ -5,9 +5,25 @@
 # Dig into /etc/bashrc_Apple_Terminal for more details.
 CURRENT_DIR="$( shell_session_update() { :; }; cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+function logerror() {
+    local RED='\033[0;31m'
+    local NC='\033[0m'
+    echo $(echo -en "${RED}")"$@"$(echo -en "${NC}")
+}
+
+# Kill all zombie processes of the built-in http proxy server. They were produced
+# by closing the shell without deactivating socks-cli before.
+# By default, the shell (at least for bash) doesn't kill background jobs when it
+# quitted. This behavior can be changed by setting `shopt -s huponexit`. The other
+# way to kill background jobs when the shell exit is to set a `trap`.
+# However, both these methods are significantly changing the behavior of the shell.
+# And that maybe cause undesired side-effects. So we chose letting the process to
+# become a zombie, and then killing it in a different timing.
+pkill -P 1 -f "socks2http.py -s"
+
 source "${CURRENT_DIR}/socksproxyenv"
 if [ "${SOCKS_PROXY}" = "" ]; then
-    echo "Error: 'socksproxyenv' didn't provide the SOCKS_PROXY env var!"
+    logerror "Error: 'socksproxyenv' didn't provide the SOCKS_PROXY env var!"
 else
     # Reload
     if [ "${_socks_cli}" = "1" ]; then
@@ -24,6 +40,8 @@ else
     eval "$(save_var GIT_PROXY_COMMAND)"
     eval "$(save_var GIT_SSH)"
     eval "$(save_var ALL_PROXY)"
+    eval "$(save_var HTTP_PROXY)"
+    eval "$(save_var HTTPS_PROXY)"
     eval "$(save_var PS1)"
 
     # Prompt that socks-cli is activated
@@ -37,11 +55,37 @@ else
 
     BEFORE_ENV="$(env)"
 
-    # For "git" protocol
+    if [ "${SOCKS_CLI_DISABLE_HTTP_PROXY}" != "1" ]; then
+        "${CURRENT_DIR}/py/socks2http/socks2http.py" -s "${SOCKS_PROXY}" &
+        _socks_cli_http_proxy_pid=$!
+        # It sleeps 0.2 second in each iteration, so here it waits for the
+        # http proxy to startup at most 10 seconds.
+        for (( c=1; c<=50; c++ )); do
+            # Use python to sleep for better portability
+            python -c "import time;time.sleep(0.2)"
+            _socks_cli_http_proxy_port=$(\
+                    lsof -Pa -p ${_socks_cli_http_proxy_pid} -iTCP -sTCP:LISTEN -Fnf \
+                            | grep ^n | sed -E 's/^([^:]*):(.*)/\2/')
+            if [ "${_socks_cli_http_proxy_port}" != "" ]; then
+                break
+            fi
+        done
+
+        if [ "${_socks_cli_http_proxy_port}" == "" ]; then
+            logerror "Error: failed to start the http proxy server,"
+            logerror "       HTTP_PROXY and HTTPS_PROXY won't be set."
+        else
+            # For CLI commands support HTTP_PROXY/HTTPS_PROXY env
+            export HTTP_PROXY="http://127.0.0.1:${_socks_cli_http_proxy_port}"
+            export HTTPS_PROXY="http://127.0.0.1:${_socks_cli_http_proxy_port}"
+        fi
+    fi
+
+    # For git to support "git://" protocol
     export GIT_PROXY_COMMAND="${CURRENT_DIR}/sh/socksified-connect.sh"
-    # For "ssh" protocol
+    # For git to support "ssh://" protocol
     export GIT_SSH="${CURRENT_DIR}/sh/socksified-ssh.sh"
-    # For "http/https" protocol
+    # For CLI commands support ALL_PROXY env
     export ALL_PROXY="socks5h://${SOCKS_PROXY}"
 
     AFTER_ENV="$(env)"

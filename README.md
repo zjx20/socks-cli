@@ -9,6 +9,8 @@ Here is a incomplete list of supported commands:
 * curl
 * brew
 * pod
+* gem
+* npm
 * ...
 
 ## Usage
