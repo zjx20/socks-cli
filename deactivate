@@ -15,7 +15,7 @@ if [ "${_socks_cli}" = "1" ]; then
 
 	if [ "${_socks_cli_http_proxy_pid}" != "" ]; then
 		# Make sure it's the right process to kill
-		_pid=$(pgrep -f socks2http.py -F <(echo ${_socks_cli_http_proxy_pid}))
+		_pid=$(pgrep -f socks2http.py | grep ${_socks_cli_http_proxy_pid})
 		[ -n "${_pid}" ] && { kill "${_pid}" && wait "${_pid}"; } 2>/dev/null
 	fi
 
