@@ -11,16 +11,6 @@ function logerror() {
     echo $(echo -en "${RED}")"$@"$(echo -en "${NC}")
 }
 
-# Kill all zombie processes of the built-in http proxy server. They were produced
-# by closing the shell without deactivating socks-cli before.
-# By default, the shell (at least for bash) doesn't kill background jobs when it
-# quitted. This behavior can be changed by setting `shopt -s huponexit`. The other
-# way to kill background jobs when the shell exit is to set a `trap`.
-# However, both these methods are significantly changing the behavior of the shell.
-# And that maybe cause undesired side-effects. So we chose letting the process to
-# become a zombie, and then killing it in a different timing.
-pkill -P 1 -f "socks2http.py -s"
-
 source "${CURRENT_DIR}/socksproxyenv"
 if [ "${SOCKS_PROXY}" = "" ]; then
     logerror "Error: 'socksproxyenv' didn't provide the SOCKS_PROXY env var!"
@@ -56,7 +46,9 @@ else
     BEFORE_ENV="$(env)"
 
     if [ "${SOCKS_CLI_DISABLE_HTTP_PROXY}" != "1" ]; then
-        "${CURRENT_DIR}/py/socks2http/socks2http.py" -s "${SOCKS_PROXY}" &
+        # Run socks2http.py in foreground mode, so that it will exit automatically even
+        # when the shell exited without deactivating.
+        "${CURRENT_DIR}/py/socks2http/socks2http.py" -s "${SOCKS_PROXY}" -f $$ &
         _socks_cli_http_proxy_pid=$!
         # It sleeps 0.2 second in each iteration, so here it waits for the
         # http proxy to startup at most 10 seconds.

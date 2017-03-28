@@ -10,6 +10,7 @@ import socket
 import select
 import time
 import errno
+import os
 
 from urlparse import urlparse
 from SocketServer import ThreadingMixIn, TCPServer
@@ -456,6 +457,22 @@ def runProxyServer(config):
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
 
+    if config.foreground is not None:
+        ppid = config.foreground
+        if ppid == 0:
+            # There is a risk that the parent process had already exited at
+            # this monent.
+            ppid = os.getppid()
+        pid = os.getpid()
+        def exitIfOrphan():
+            while True:
+                curr_ppid = os.getppid()
+                if ppid != curr_ppid:
+                    os.kill(pid, signal.SIGTERM)
+                time.sleep(30)
+
+        thread.start_new_thread(exitIfOrphan, ())
+
     print("Serving HTTP proxy on %s port %d ..." % httpd.socket.getsockname())
     httpd.serve_forever()
 
@@ -478,6 +495,12 @@ def parseCmd(argv=None):
     parser.add_argument("--debug", "-d",
                         action="store_true",
                         help="Debug mode (verbose output)")
+    parser.add_argument("--foreground", "-f",
+                        action="store",
+                        type=int,
+                        help="As opposed to background or daemon, " +
+                             "the program will exit when its parent exited. " +
+                             "Expected a pid number or 0 for this parameter")
     return parser.parse_args(argv)
 
 
