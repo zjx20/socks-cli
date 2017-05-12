@@ -45,6 +45,12 @@ else
 
     BEFORE_ENV="$(env)"
 
+    if [ "${SOCKS_CLI_DISABLE_HTTP_PROXY}" != "1" ] && \
+            ! which lsof > /dev/null 2>&1 ; then
+        logerror "Missing 'lsof' command, http_proxy feature will be disabled."
+        SOCKS_CLI_DISABLE_HTTP_PROXY=1
+    fi
+
     if [ "${SOCKS_CLI_DISABLE_HTTP_PROXY}" != "1" ]; then
         # Run socks2http.py in foreground mode, so that it will exit automatically even
         # when the shell exited without deactivating.
