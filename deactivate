@@ -1,31 +1,30 @@
+#!/bin/bash
+# The shebang is just a hint for editors.
 
 if [ "${_socks_cli}" = "1" ]; then
-	function restore_var() {
-		if [ -n "$1" ]; then
-			local VAR="_socks_cli_$1"
-			if [ -n "${!VAR+x}" ]; then
-				echo "export $1=\"\${${VAR}}\"; unset ${VAR}"
-			else
-				# Check if the variable really exists, for security.
-				# e.g. to avoid code injection or something else.
-				[ -n "${!1+x}" ] && echo "unset $1"
-			fi
-		fi
-	}
+    function _restore_var() {
+        if [ -n "$1" ]; then
+            local VAR="_socks_cli_$1"
+            if [ -n "${!VAR+x}" ]; then
+                echo "export $1=\"\${${VAR}}\"; unset ${VAR}"
+            else
+                # Check if the variable really exists, for security.
+                # e.g. to avoid code injection or something else.
+                [ -n "${!1+x}" ] && echo "unset $1"
+            fi
+        fi
+    }
 
-	if [ "${_socks_cli_http_proxy_pid}" != "" ]; then
-		# Make sure it's the right process to kill
-		_pid=$(pgrep -f socks2http.py | grep ${_socks_cli_http_proxy_pid})
-		[ -n "${_pid}" ] && { kill "${_pid}" && wait "${_pid}"; } 2>/dev/null
-	fi
+    # Execute deactivation hooks
+    for support in "${_socks_cli_supports[@]}"; do
+        _hook="socks_cli_deactivate_$support"
+        _is_function_exist "$_hook" && "$_hook"
+    done
 
-	unset _socks_cli
-	unset _socks_cli_http_proxy_pid
-	unset _socks_cli_http_proxy_port
-	eval "$(restore_var GIT_PROXY_COMMAND)"
-	eval "$(restore_var GIT_SSH)"
-	eval "$(restore_var ALL_PROXY)"
-	eval "$(restore_var HTTP_PROXY)"
-	eval "$(restore_var HTTPS_PROXY)"
-	eval "$(restore_var PS1)"
+    # Restore variables
+    for var in "${_socks_cli_saved_vars[@]}"; do
+        eval "$(_restore_var $var)"
+    done
+
+    unset _socks_cli
 fi

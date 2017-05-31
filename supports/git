@@ -1,0 +1,11 @@
+#!/bin/bash
+# The shebang is just a hint for editors.
+
+# For git to support "git://" protocol
+EXPORT_ENV GIT_PROXY_COMMAND "${SOCKS_CLI_DIR}/sh/socksified-connect.sh"
+
+# For git to support "ssh://" protocol
+EXPORT_ENV GIT_SSH "${SOCKS_CLI_DIR}/sh/socksified-ssh.sh"
+
+# For git to support "http(s)://" protocol
+EXPORT_ENV ALL_PROXY "socks5h://${SOCKS_PROXY}"

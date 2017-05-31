@@ -1,9 +1,5 @@
-
-# If the script itself is evaluated by `source`, when executing `cd` in a subshell
-# under the Terminal.app on macOS 10.11+, some unexpected output will pop up.
-# So we override the shell_session_update function in order to suppress the garbage.
-# Dig into /etc/bashrc_Apple_Terminal for more details.
-CURRENT_DIR="$( shell_session_update() { :; }; cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#!/bin/bash
+# The shebang is just a hint for editors.
 
 function logerror() {
     local RED='\033[0;31m'
@@ -11,84 +7,100 @@ function logerror() {
     echo $(echo -en "${RED}")"$@"$(echo -en "${NC}")
 }
 
-source "${CURRENT_DIR}/socksproxyenv"
-if [ "${SOCKS_PROXY}" = "" ]; then
-    logerror "Error: 'socksproxyenv' didn't provide the SOCKS_PROXY env var!"
+# Determine the directory containing this script
+if [[ -n $BASH_VERSION ]]; then
+    _SCRIPT_LOCATION=${BASH_SOURCE[0]}
+    _SHELL="bash"
+elif [[ -n $ZSH_VERSION ]]; then
+    _SCRIPT_LOCATION=${funcstack[1]}
+    _SHELL="zsh"
 else
-    # Reload
-    if [ "${_socks_cli}" = "1" ]; then
-        source "${CURRENT_DIR}/deactivate"
-    fi
-
-    function save_var() {
-        if [ -n "$1" ]; then
-            [ -n "${!1+x}" ] && echo "_socks_cli_$1=\"\${$1}\""
-        fi
-    }
-
-    _socks_cli=1
-    eval "$(save_var GIT_PROXY_COMMAND)"
-    eval "$(save_var GIT_SSH)"
-    eval "$(save_var ALL_PROXY)"
-    eval "$(save_var HTTP_PROXY)"
-    eval "$(save_var HTTPS_PROXY)"
-    eval "$(save_var PS1)"
-
-    # Prompt that socks-cli is activated
-    PS1_PREFIX=$'\e[0;32msocks-cli\e[0m '
-    if [ ! -z "$BASH" ]; then
-        # Bash needs \[ and \] to surround non-printing characters:
-        #   http://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
-        PS1_PREFIX=$'\[\e[0;32m\]socks-cli\[\e[0m\] '
-    fi
-    export PS1=$PS1_PREFIX$PS1
-
-    BEFORE_ENV="$(env)"
-
-    if [ "${SOCKS_CLI_DISABLE_HTTP_PROXY}" != "1" ] && \
-            ! which lsof > /dev/null 2>&1 ; then
-        logerror "Missing 'lsof' command, http_proxy feature will be disabled."
-        SOCKS_CLI_DISABLE_HTTP_PROXY=1
-    fi
-
-    if [ "${SOCKS_CLI_DISABLE_HTTP_PROXY}" != "1" ]; then
-        # Run socks2http.py in foreground mode, so that it will exit automatically even
-        # when the shell exited without deactivating.
-        "${CURRENT_DIR}/py/socks2http/socks2http.py" -s "${SOCKS_PROXY}" -f $$ &
-        _socks_cli_http_proxy_pid=$!
-        # It sleeps 0.2 second in each iteration, so here it waits for the
-        # http proxy to startup at most 10 seconds.
-        for (( c=1; c<=50; c++ )); do
-            # Use python to sleep for better portability
-            python -c "import time;time.sleep(0.2)"
-            _socks_cli_http_proxy_port=$(\
-                    lsof -Pa -p ${_socks_cli_http_proxy_pid} -iTCP -sTCP:LISTEN -Fnf \
-                            | grep ^n | sed -E 's/^([^:]*):(.*)/\2/')
-            if [ "${_socks_cli_http_proxy_port}" != "" ]; then
-                break
-            fi
-        done
-
-        if [ "${_socks_cli_http_proxy_port}" == "" ]; then
-            logerror "Error: failed to start the http proxy server,"
-            logerror "       HTTP_PROXY and HTTPS_PROXY won't be set."
-        else
-            # For CLI commands support HTTP_PROXY/HTTPS_PROXY env
-            export HTTP_PROXY="http://127.0.0.1:${_socks_cli_http_proxy_port}"
-            export HTTPS_PROXY="http://127.0.0.1:${_socks_cli_http_proxy_port}"
-        fi
-    fi
-
-    # For git to support "git://" protocol
-    export GIT_PROXY_COMMAND="${CURRENT_DIR}/sh/socksified-connect.sh"
-    # For git to support "ssh://" protocol
-    export GIT_SSH="${CURRENT_DIR}/sh/socksified-ssh.sh"
-    # For CLI commands support ALL_PROXY env
-    export ALL_PROXY="socks5h://${SOCKS_PROXY}"
-
-    AFTER_ENV="$(env)"
-
-    echo "Done! Some environment variables have been changed to:"
-    echo "$(diff --unchanged-line-format="" --old-line-format="" --new-line-format="  %L" <(echo "${BEFORE_ENV}") <(echo "${AFTER_ENV}"))"
-    echo ""
+    echo "Only bash and zsh are supported"
+    return 1
 fi
+SOCKS_CLI_DIR="$(dirname "${_SCRIPT_LOCATION}")"
+
+# Ensure that this script is sourced, not executed
+# Also note that errors are ignored as `activate foo` doesn't generate a bad
+# value for $0 which would cause errors.
+if [[ -n $BASH_VERSION ]] && [[ "$(basename "$0" 2> /dev/null)" == "activate" ]]; then
+    logerror "Error: activate must be sourced. Run 'source "$0"' instead."
+    exit 1
+fi
+
+# Reload
+if [ "${_socks_cli}" = "1" ]; then
+    source "${SOCKS_CLI_DIR}/deactivate"
+fi
+
+declare -a _socks_cli_saved_vars=()
+declare -a _socks_cli_supports=()
+declare -a _socks_cli_export_vars=()
+
+function _save_var() {
+    if [ -n "$1" ]; then
+        _socks_cli_saved_vars+=("$1")
+        if [ -n "${!1+x}" ]; then
+            eval "_socks_cli_$1=\"${!1}\""
+        fi
+    fi
+}
+
+function _is_function_exist() {
+    declare -f "$1" > /dev/null
+    return $?
+}
+
+function _contains() {
+    for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1
+}
+
+function LOAD_SUPPORT() {
+    if [[ $# < 1 ]]; then
+        logerror "Error: LOAD_SUPPORT() requires one parameter."
+        return 1
+    fi
+    local script="${SOCKS_CLI_DIR}/supports/$1"
+    if [ ! -f "${script}" ]; then
+        logerror "Error: \"${script}\" doesn't exist."
+        return 1
+    fi
+    _socks_cli_supports+=("$1")
+    source "${script}"
+
+    # Execute the activation hook
+    local hook="socks_cli_activate_$1"
+    _is_function_exist "$hook" && "$hook"
+}
+
+function EXPORT_ENV() {
+    if [[ $# < 2 ]]; then
+        logerror "Error: DEFINE_ENV() requires two parameter."
+        return 1
+    fi
+    if _contains "$1" "${_socks_cli_export_vars[@]}" ; then
+        logerror "Warning: ignoring duplicated env var $1=\"$2\""
+        return 1
+    fi
+    _socks_cli_export_vars+=("$1")
+    _save_var "$1"
+    eval "export $1=\"$2\""
+}
+
+source "${SOCKS_CLI_DIR}/socksproxyenv"
+
+# Prompt that socks-cli is activated
+_save_var "PS1"
+PS1_PREFIX='\033[0;32msocks-cli\033[0m '
+if [ "$_SHELL" = "bash" ]; then
+    # Bash needs \[ and \] to surround non-printing characters:
+    #   http://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
+    PS1_PREFIX='\[\033[0;32m\]socks-cli\[\033[0m\] '
+fi
+export PS1=$PS1_PREFIX$PS1
+
+_socks_cli=1
+echo "Done! Some environment variables have been changed to:"
+for var in "${_socks_cli_export_vars[@]}"; do
+    echo "  $var=${!var}"
+done
