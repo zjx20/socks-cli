@@ -23,7 +23,7 @@ SOCKS_CLI_DIR="$(dirname "${_SCRIPT_LOCATION}")"
 # Ensure that this script is sourced, not executed
 # Also note that errors are ignored as `activate foo` doesn't generate a bad
 # value for $0 which would cause errors.
-if [[ -n $BASH_VERSION ]] && [[ "$(basename "$0" 2> /dev/null)" == "activate" ]]; then
+if [[ -n $BASH_VERSION ]] && [[ "$(basename "$0" 2> /dev/null)" = "activate" ]]; then
     _logerror "Error: activate must be sourced. Run 'source "$0"' instead."
     exit 1
 fi
@@ -40,11 +40,20 @@ declare -a _socks_cli_saved_vars=()
 declare -a _socks_cli_supports=()
 declare -a _socks_cli_export_vars=()
 
+function _expand() {
+    eval "(echo \"\${$1}\") 2>/dev/null"
+}
+
+function _defined() {
+    [ -n "$(eval "(echo \"\${$1+x}\") 2>/dev/null")" ]
+    return $?
+}
+
 function _save_var() {
     if [ -n "$1" ]; then
         _socks_cli_saved_vars+=("$1")
-        if [ -n "${!1+x}" ]; then
-            eval "_socks_cli_saved_$1=\"${!1}\""
+        if _defined "$1"; then
+            eval "_socks_cli_saved_$1=\"$(_expand "$1")\""
         fi
     fi
 }
@@ -59,7 +68,7 @@ function _contains() {
 }
 
 function LOAD_SUPPORT() {
-    if [[ $# < 1 ]]; then
+    if [ $# -lt 1 ]; then
         _logerror "Error: LOAD_SUPPORT() requires one parameter."
         return 1
     fi
@@ -77,7 +86,7 @@ function LOAD_SUPPORT() {
 }
 
 function EXPORT_ENV() {
-    if [[ $# < 2 ]]; then
+    if [ $# -lt 2 ]; then
         _logerror "Error: DEFINE_ENV() requires two parameters."
         return 1
     fi
@@ -94,16 +103,18 @@ source "${SOCKS_CLI_DIR}/socksproxyenv"
 
 # Prompt that socks-cli is activated
 _save_var "PS1"
-PS1_PREFIX='\033[0;32msocks-cli\033[0m '
+PS1_PREFIX=$'\e[0;32msocks-cli\e[0m '
 if [ "$_SHELL" = "bash" ]; then
     # Bash needs \[ and \] to surround non-printing characters:
     #   http://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
     PS1_PREFIX='\[\033[0;32m\]socks-cli\[\033[0m\] '
+elif [ "$_SHELL" = "zsh" ]; then
+    PS1_PREFIX="%{%F{green}%}socks-cli%{%f%} "
 fi
 export PS1=$PS1_PREFIX$PS1
 
 _socks_cli=1
 echo "Done! Some environment variables have been changed to:"
 for var in "${_socks_cli_export_vars[@]}"; do
-    echo "  $var=${!var}"
+    echo "  $var=$(_expand "$var")"
 done

@@ -43,20 +43,20 @@ function socks_cli_deactivate_dsocks() {
 function _sed_escape() {
     echo "$1" | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g'
 }
-export -f _sed_escape
+export -f _sed_escape > /dev/null
 
 function socks_cli_replace() {
     local search=$(_sed_escape "$2")
     local replace=$(_sed_escape "$3")
     echo "$1" | sed "s/${search}/${replace}/g"
 }
-export -f socks_cli_replace
+export -f socks_cli_replace > /dev/null
 
 function SOCKSIFY() {
     if [ "${_socks_cli_socksify}" != "1" ]; then
         return 1
     fi
-    if [[ "$#" < 1 ]]; then
+    if [ $# -lt 1 ]; then
         _logerror "Error: SOCKSIFY() requires at least one parameter."
         return 1
     fi

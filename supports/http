@@ -23,7 +23,7 @@ function socks_cli_activate_http() {
         fi
     done
 
-    if [ "${_socks_cli_http_proxy_port}" == "" ]; then
+    if [ "${_socks_cli_http_proxy_port}" = "" ]; then
         _logerror "Error: failed to start the http proxy server,"
         _logerror "       HTTP_PROXY and HTTPS_PROXY won't be set."
     else
