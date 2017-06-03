@@ -1,7 +1,7 @@
 #!/bin/bash
 # The shebang is just a hint for editors.
 
-function logerror() {
+function _logerror() {
     local RED='\033[0;31m'
     local NC='\033[0m'
     echo $(echo -en "${RED}")"$@"$(echo -en "${NC}")
@@ -15,7 +15,7 @@ elif [[ -n $ZSH_VERSION ]]; then
     _SCRIPT_LOCATION=${funcstack[1]}
     _SHELL="zsh"
 else
-    echo "Only bash and zsh are supported"
+    _logerror "Only bash and zsh are supported"
     return 1
 fi
 SOCKS_CLI_DIR="$(dirname "${_SCRIPT_LOCATION}")"
@@ -24,7 +24,7 @@ SOCKS_CLI_DIR="$(dirname "${_SCRIPT_LOCATION}")"
 # Also note that errors are ignored as `activate foo` doesn't generate a bad
 # value for $0 which would cause errors.
 if [[ -n $BASH_VERSION ]] && [[ "$(basename "$0" 2> /dev/null)" == "activate" ]]; then
-    logerror "Error: activate must be sourced. Run 'source "$0"' instead."
+    _logerror "Error: activate must be sourced. Run 'source "$0"' instead."
     exit 1
 fi
 
@@ -32,6 +32,9 @@ fi
 if [ "${_socks_cli}" = "1" ]; then
     source "${SOCKS_CLI_DIR}/deactivate"
 fi
+
+# Convert to absolute path
+SOCKS_CLI_DIR="$(python -c "import os,sys;print(os.path.abspath(sys.argv[1]))" "${SOCKS_CLI_DIR}")"
 
 declare -a _socks_cli_saved_vars=()
 declare -a _socks_cli_supports=()
@@ -41,7 +44,7 @@ function _save_var() {
     if [ -n "$1" ]; then
         _socks_cli_saved_vars+=("$1")
         if [ -n "${!1+x}" ]; then
-            eval "_socks_cli_$1=\"${!1}\""
+            eval "_socks_cli_saved_$1=\"${!1}\""
         fi
     fi
 }
@@ -57,12 +60,12 @@ function _contains() {
 
 function LOAD_SUPPORT() {
     if [[ $# < 1 ]]; then
-        logerror "Error: LOAD_SUPPORT() requires one parameter."
+        _logerror "Error: LOAD_SUPPORT() requires one parameter."
         return 1
     fi
     local script="${SOCKS_CLI_DIR}/supports/$1"
     if [ ! -f "${script}" ]; then
-        logerror "Error: \"${script}\" doesn't exist."
+        _logerror "Error: \"${script}\" doesn't exist."
         return 1
     fi
     _socks_cli_supports+=("$1")
@@ -75,11 +78,11 @@ function LOAD_SUPPORT() {
 
 function EXPORT_ENV() {
     if [[ $# < 2 ]]; then
-        logerror "Error: DEFINE_ENV() requires two parameter."
+        _logerror "Error: DEFINE_ENV() requires two parameters."
         return 1
     fi
     if _contains "$1" "${_socks_cli_export_vars[@]}" ; then
-        logerror "Warning: ignoring duplicated env var $1=\"$2\""
+        _logerror "Warning: ignoring duplicated env var $1=\"$2\""
         return 1
     fi
     _socks_cli_export_vars+=("$1")

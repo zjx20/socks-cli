@@ -3,7 +3,7 @@
 
 function socks_cli_activate_http() {
     if ! which lsof > /dev/null 2>&1 ; then
-        logerror "Missing 'lsof' command, http_proxy feature will be disabled."
+        _logerror "Missing 'lsof' command, http_proxy feature will be disabled."
         return 1
     fi
 
@@ -24,8 +24,8 @@ function socks_cli_activate_http() {
     done
 
     if [ "${_socks_cli_http_proxy_port}" == "" ]; then
-        logerror "Error: failed to start the http proxy server,"
-        logerror "       HTTP_PROXY and HTTPS_PROXY won't be set."
+        _logerror "Error: failed to start the http proxy server,"
+        _logerror "       HTTP_PROXY and HTTPS_PROXY won't be set."
     else
         SOCKS_CLI_HTTP_PROXY="127.0.0.1:${_socks_cli_http_proxy_port}"
         EXPORT_ENV HTTP_PROXY  "http://${SOCKS_CLI_HTTP_PROXY}"
