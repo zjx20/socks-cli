@@ -1,7 +1,7 @@
 socks-cli
 =========
 
-`socks-cli` is a tool to make CLI commands use the specified socks5 proxy, by setting up special environment variables, such as `ALL_PROXY`. It works on linux and macOS with bash and python2.7 installed.
+`socks-cli` is a solution to make CLI commands use the specified socks5 proxy, by setting up special environment variables, such as `ALL_PROXY`. It works on linux and macOS with bash and python2.7 installed.
 
 Here is a incomplete list of supported commands:
 
@@ -36,3 +36,5 @@ Here is a incomplete list of supported commands:
 	```
 
 4. Optionally, you can call `source socks-cli/deactivate` to deactivate `socks-cli`.
+
+For more details, please see [socksproxyenv.sample](socksproxyenv.sample).
