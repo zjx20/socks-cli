@@ -473,7 +473,11 @@ def runProxyServer(config):
 
         thread.start_new_thread(exitIfOrphan, ())
 
-    print("Serving HTTP proxy on %s port %d ..." % httpd.socket.getsockname())
+    ipport = httpd.socket.getsockname()
+    if config.save_port is not None:
+        with open(config.save_port, "w") as f:
+            f.write(str(ipport[1]))
+    print("Serving HTTP proxy on %s port %d ..." % ipport)
     httpd.serve_forever()
 
 
@@ -482,15 +486,21 @@ def parseCmd(argv=None):
     parser.add_argument("--bind", "-b",
                         action="store",
                         help="The bind address for the proxy server",
-                        default="127.0.0.1")
+                        default="127.0.0.1",
+                        metavar="ADDR")
     parser.add_argument("--port", "-p",
                         action="store",
                         type=int,
                         help="The port for the proxy server",
                         default="0")
+    parser.add_argument("--save-port",
+                        action="store",
+                        metavar="FILE",
+                        help="Save the port number to file")
     parser.add_argument("--socks5-server", "-s",
                         action="store",
-                        help="The upstream SOCKS5 proxy server, " +
+                        metavar="SOCKS5_SERVER",
+                        help="The upstream SOCKS5 proxy server, " + \
                              "e.g. \"localhost:1080\"")
     parser.add_argument("--debug", "-d",
                         action="store_true",
@@ -498,9 +508,10 @@ def parseCmd(argv=None):
     parser.add_argument("--foreground", "-f",
                         action="store",
                         type=int,
-                        help="As opposed to background or daemon, " +
-                             "the program will exit when its parent exited. " +
-                             "Expected a pid number or 0 for this parameter")
+                        metavar="PID",
+                        help="As opposed to background or daemon, " + \
+                             "the program will be terminated when " + \
+                             "its parent exited. Expected a pid number or 0.")
     return parser.parse_args(argv)
 
 
