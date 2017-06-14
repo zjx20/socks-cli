@@ -1,7 +1,7 @@
 socks-cli
 =========
 
-`socks-cli` is a solution to make CLI commands use the specified socks5 proxy, by setting up special environment variables, such as `ALL_PROXY`. It works on linux and macOS with bash and python2.7 installed.
+`socks-cli` is a solution to make CLI commands use the specified socks5 proxy, by setting up special environment variables, such as `ALL_PROXY`. It works on linux and macOS with bash and python installed.
 
 Here is a incomplete list of supported commands:
 
@@ -22,10 +22,13 @@ Here is a incomplete list of supported commands:
 3. Call `source socks-cli/activate` before your CLI commands:
 	```
 	$ source socks-cli/activate
+	Serving HTTP proxy on 127.0.0.1 port 54967 ...
 	Done! Some environment variables have been changed to:
-	  GIT_SSH=/Users/x/socks-cli/socks5proxyssh
-	  ALL_PROXY=socks5h://localhost:1080
-	  GIT_PROXY_COMMAND=/Users/x/socks-cli/socks5proxywrapper
+	  GIT_PROXY_COMMAND=/Users/x/socks-git/sh/socksified-connect.sh
+	  GIT_SSH=/Users/x/socks-git/sh/socksified-ssh.sh
+	  ALL_PROXY=socks5h://127.0.0.1:1080
+	  HTTP_PROXY=http://127.0.0.1:54967
+	  HTTPS_PROXY=http://127.0.0.1:54967
 
 	$ git clone git@github.com:git/git.git
 	Cloning into 'git'...

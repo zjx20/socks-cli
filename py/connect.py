@@ -28,7 +28,7 @@ def _loop(f, t, cond):
                         t.write(buf)
                     else:
                         break
-                except OSError, e:
+                except OSError as e:
                     if e.errno == errno.EAGAIN:
                         pass
                     else:

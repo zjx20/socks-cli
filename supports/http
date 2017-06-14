@@ -11,6 +11,8 @@ function socks_cli_activate_http() {
     _socks_cli_http_proxy_pid=$!
     # Waits for the http proxy to startup at most 10 seconds.
     for (( c=1; c<=50; c++ )); do
+        # Use python to sleep for better portability
+        python -c "import time;time.sleep(0.2)"
         _socks_cli_http_proxy_port=$(cat "${_socks_cli_http_port_tmp_file}")
         if [ "${_socks_cli_http_proxy_port}" != "" ]; then
             break

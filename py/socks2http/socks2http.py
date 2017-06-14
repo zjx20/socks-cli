@@ -3,24 +3,37 @@
 
 import argparse
 import shutil
-import httplib
 import signal
-import thread
 import socket
 import select
 import time
 import errno
 import os
+import sys
 
-from urlparse import urlparse
-from SocketServer import ThreadingMixIn, TCPServer
-from BaseHTTPServer import BaseHTTPRequestHandler
 from SocksiPy import socks
 
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        # python 3
+        from io import StringIO
+
+if sys.version_info < (3, 0):
+    import httplib
+    import thread
+    from urlparse import urlparse
+    from SocketServer import ThreadingMixIn, TCPServer
+    from BaseHTTPServer import BaseHTTPRequestHandler
+else:
+    import http.client as httplib
+    import _thread as thread
+    from urllib.parse import urlparse
+    from socketserver import ThreadingMixIn, TCPServer
+    from http.server import BaseHTTPRequestHandler
 
 SOCKS5_PROXY = None
 DEBUG_MODE = False
@@ -311,10 +324,10 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
     def _proxy(self):
         try:
             self.doCommon()
-        except socket.gaierror, e:
+        except socket.gaierror as e:
             msg = str(e)
             return self.send_error(500, msg)
-        except socket.error, e:
+        except socket.error as e:
             if e.errno == errno.EPIPE:
                 # Ignore broken pipe error
                 pass
@@ -352,13 +365,14 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
             sock = socket.socket()
         try:
             sock.connect((host, port))
-        except Exception, e:
+        except Exception as e:
             msg = str(e)
             return self.send_error(400, msg)
         self.log_request(200)
-        self.wfile.write("HTTP/1.1 200 Connection Established\r\n")
-        self.wfile.write("Proxy-agent: " + self.version_string() + "\r\n")
-        self.wfile.write("\r\n")
+        self.wfile.write(b"HTTP/1.1 200 Connection Established\r\n")
+        proxy_agent = "Proxy-agent: " + self.version_string() + "\r\n"
+        self.wfile.write(proxy_agent.encode("utf-8"))
+        self.wfile.write(b"\r\n")
 
         try:
             bufsize = 32*1024
@@ -464,6 +478,7 @@ def runProxyServer(config):
             # this monent.
             ppid = os.getppid()
         pid = os.getpid()
+
         def exitIfOrphan():
             while True:
                 curr_ppid = os.getppid()
@@ -500,7 +515,7 @@ def parseCmd(argv=None):
     parser.add_argument("--socks5-server", "-s",
                         action="store",
                         metavar="SOCKS5_SERVER",
-                        help="The upstream SOCKS5 proxy server, " + \
+                        help="The upstream SOCKS5 proxy server, " +
                              "e.g. \"localhost:1080\"")
     parser.add_argument("--debug", "-d",
                         action="store_true",
@@ -509,8 +524,8 @@ def parseCmd(argv=None):
                         action="store",
                         type=int,
                         metavar="PID",
-                        help="As opposed to background or daemon, " + \
-                             "the program will be terminated when " + \
+                        help="As opposed to background or daemon, " +
+                             "the program will be terminated when " +
                              "its parent exited. Expected a pid number or 0.")
     return parser.parse_args(argv)
 
