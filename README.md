@@ -7,6 +7,7 @@ Here is a incomplete list of supported commands:
 
 * git
 * curl
+* wget
 * brew
 * pod
 * gem

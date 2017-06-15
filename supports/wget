@@ -1,0 +1,11 @@
+#!/bin/bash
+# The shebang is just a hint for editors.
+
+if ! _defined "SOCKS_CLI_HTTP_PROXY" ; then
+    _logerror "The http support should be loaded before!"
+else
+    # wget requires these variables to have lowercase name.
+    EXPORT_ENV http_proxy "http://${SOCKS_CLI_HTTP_PROXY}"
+    EXPORT_ENV https_proxy "http://${SOCKS_CLI_HTTP_PROXY}"
+    EXPORT_ENV ftp_proxy "http://${SOCKS_CLI_HTTP_PROXY}"
+fi
