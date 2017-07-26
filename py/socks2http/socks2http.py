@@ -251,7 +251,7 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
         if not all((pieces.scheme, pieces.netloc)):
             return self.send_error(400, "Invalid URL to proxy")
 
-        headers = self.headers.dict
+        headers = {k.lower():v for k, v in self.headers.items()}
         omittedRequestHeaders = ("accept-encoding", "host", "proxy-connection")
         for k in omittedRequestHeaders:
             if k in headers:
@@ -266,15 +266,15 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
                     port = 443
             sock.connect((host, int(port)))
             conn.sock = sock
-        cl = int(self.headers.getheader("content-length", "0"))
+        cl = int(self.headers.get("content-length", "0"))
         body = None
         if cl > 0:
             body = BoundedReader(self.rfile, int(cl))
-        elif self.headers.getheader("transfer-encoding") == "chunked":
+        elif self.headers.get("transfer-encoding") == "chunked":
             body = ChunkedEncodingValidator(self.rfile)
         conn.request(self.command, url, body, headers)
 
-        res = conn.getresponse(buffering=True)
+        res = conn.getresponse()
 
         # send_response() sends "Server" and "Date" headers as well as the
         # status code. But those headers might already exist in the response
@@ -312,10 +312,11 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
             buf = res.read(bufsize)
             if not buf:
                 if chunked:
-                    self.wfile.write("0\r\n\r\n")
+                    self.wfile.write(b"0\r\n\r\n")
                 break
             if chunked:
-                self.wfile.write("%X\r\n%s\r\n" % (len(buf), buf))
+                c = "%X\r\n%s\r\n" % (len(buf), buf)
+                self.wfile.write(c.encode("utf-8"))
             else:
                 self.wfile.write(buf)
         if closeConn:
