@@ -315,8 +315,10 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
                     self.wfile.write(b"0\r\n\r\n")
                 break
             if chunked:
-                c = "%X\r\n%s\r\n" % (len(buf), buf)
-                self.wfile.write(c.encode("utf-8"))
+                l = "%X\r\n" % (len(buf))
+                self.wfile.write(l.encode("utf-8"))
+                self.wfile.write(buf)
+                self.wfile.write(b'\r\n')
             else:
                 self.wfile.write(buf)
         if closeConn:
