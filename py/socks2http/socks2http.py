@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import base64
 import shutil
 import signal
 import socket
@@ -256,8 +257,13 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
         for k in omittedRequestHeaders:
             if k in headers:
                 del headers[k]
-        host, port = (pieces.netloc.split(":") + [None])[:2]
+        host, port = pieces.hostname, pieces.port
         conn = httplib.HTTPConnection(host=host, port=port)
+        if "authorization" not in headers:
+            if pieces.username is not None:
+                auth = ":".join((pieces.username, pieces.password or ""))
+                auth = base64.b64encode(auth.encode("utf-8")).decode("utf-8")
+                headers["authorization"] = "Basic " + auth
         if SOCKS5_PROXY:
             sock = socks.socksocket()
             if port is None:
