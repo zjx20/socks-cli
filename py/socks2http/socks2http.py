@@ -272,7 +272,8 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
             body = BoundedReader(self.rfile, int(cl))
         elif self.headers.get("transfer-encoding") == "chunked":
             body = ChunkedEncodingValidator(self.rfile)
-        conn.request(self.command, url, body, headers)
+        path = "?".join(filter(None, (pieces.path, pieces.query)))
+        conn.request(self.command, path, body, headers)
 
         res = conn.getresponse()
 
