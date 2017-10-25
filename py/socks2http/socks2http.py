@@ -252,7 +252,9 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
         if not all((pieces.scheme, pieces.netloc)):
             return self.send_error(400, "Invalid URL to proxy")
 
-        headers = {k.lower():v for k, v in self.headers.items()}
+        headers = {}
+        for k, v in self.headers.items():
+            headers[k.lower()] = v
         omittedRequestHeaders = ("accept-encoding", "host", "proxy-connection")
         for k in omittedRequestHeaders:
             if k in headers:
