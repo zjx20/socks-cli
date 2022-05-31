@@ -1,0 +1,8 @@
+#!/bin/bash
+# The shebang is just a hint for editors.
+
+_socks_proxy_host=${SOCKS_PROXY%%:*}
+_socks_proxy_port=${SOCKS_PROXY##*:}
+
+# set socks proxy for JVM
+EXPORT_ENV MAVEN_OPTS "-DsocksProxyHost=${_socks_proxy_host} -DsocksProxyPort=${_socks_proxy_port}"

@@ -36,6 +36,7 @@ export SOCKS_PROXY=
 LOAD_SUPPORT git
 LOAD_SUPPORT http
 LOAD_SUPPORT wget
+LOAD_SUPPORT mvn
 
 
 # Further more, you can extend socks-cli to support more CLI commands, by

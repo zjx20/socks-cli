@@ -12,6 +12,7 @@ Here is an incomplete list of supported commands:
 * pod
 * gem
 * npm
+* mvn
 * ...
 
 ## Usage
