@@ -1,0 +1,13 @@
+#!/bin/bash
+
+python_bin=python
+candidates=( $python_bin python3 python2 )
+for py in "${candidates[@]}"; do
+    if which $py >/dev/null; then
+        python_bin=$py
+        break
+    fi
+done
+
+exec $python_bin "$@"
+

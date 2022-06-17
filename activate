@@ -34,7 +34,7 @@ if [ "${_socks_cli}" = "1" ]; then
 fi
 
 # Convert to absolute path
-SOCKS_CLI_DIR="$(python -c "import os,sys;print(os.path.abspath(sys.argv[1]))" "${SOCKS_CLI_DIR}")"
+SOCKS_CLI_DIR="$("${SOCKS_CLI_DIR}/py/py_wrapper" -c "import os,sys;print(os.path.abspath(sys.argv[1]))" "${SOCKS_CLI_DIR}")"
 
 declare -a _socks_cli_saved_vars=()
 declare -a _socks_cli_supports=()

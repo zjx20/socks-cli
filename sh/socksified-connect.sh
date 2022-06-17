@@ -4,4 +4,4 @@ cd "${CURRENT_DIR}"
 if [ -z "${SOCKS_PROXY}" ]; then
     source ../socksproxyenv
 fi
-../py/connect.py -s ${SOCKS_PROXY} "$@"
+../py/py_wrapper ../py/connect.py -s ${SOCKS_PROXY} "$@"
