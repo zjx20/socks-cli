@@ -1,6 +1,25 @@
 #!/bin/bash
 # The shebang is just a hint for editors.
 
+function _socks_cli_clean_dsocks_tmp() {
+    local tmp_path="${SOCKS_CLI_DIR}/tmp/"
+    # First pass: remove command shadows if the shell has been dead.
+    find "${tmp_path}" -name "_shell_pid" -print0 |
+        while IFS= read -r -d '' file; do
+            pid="$(tr -d '\n\r' < "${file}")"
+            if [ "${pid}" = "$$" ]; then
+                # Ignore the current shell
+                continue
+            fi
+            if ! pgrep -F "${file}" > /dev/null; then
+                find "$(dirname "${file}")" -type f -delete
+            fi
+        done
+
+    # Second pass: remove empty directories recursively.
+    find "${tmp_path}" -empty -type d -delete
+}
+
 function socks_cli_activate_dsocks() {
     _socks_cli_dsocks_lib="${SOCKS_CLI_DIR}/dsocks/libdsocks.so"
     "${SOCKS_CLI_DIR}/sh/bootstrap-dsocks.sh"
@@ -9,6 +28,8 @@ function socks_cli_activate_dsocks() {
         _logerror "       the SOCKSIFY feature will be disabled."
         return 1
     fi
+
+    _socks_cli_clean_dsocks_tmp
 
     # Create a dedicated temporary folder for each shell process.
     # Since the maximum pid number in unix-like OS is typically
@@ -21,7 +42,9 @@ function socks_cli_activate_dsocks() {
     local name=$((shell_pid%100))
     local tmp_path="${SOCKS_CLI_DIR}/tmp/${level_one}/${level_two}/${name}"
     mkdir -p "${tmp_path}"
-    [ -n "${tmp_path}" ] && rm -f "${tmp_path}/*"
+    # Remove existing command shadows
+    [ -n "${tmp_path}" ] && find "${tmp_path}/" -type f -delete
+    echo "${shell_pid}" > "${tmp_path}/_shell_pid"
 
     local preappend="${tmp_path}"
     if [ -n "${PATH}" ]; then
@@ -40,18 +63,6 @@ function socks_cli_deactivate_dsocks() {
     unset _socks_cli_socksify
 }
 
-function _sed_escape() {
-    echo "$1" | sed -e 's/\\/\\\\/g; s/\//\\\//g; s/&/\\\&/g'
-}
-export -f _sed_escape > /dev/null
-
-function socks_cli_replace() {
-    local search=$(_sed_escape "$2")
-    local replace=$(_sed_escape "$3")
-    echo "$1" | sed "s/${search}/${replace}/g"
-}
-export -f socks_cli_replace > /dev/null
-
 function SOCKSIFY() {
     if [ "${_socks_cli_socksify}" != "1" ]; then
         return 1
@@ -63,12 +74,24 @@ function SOCKSIFY() {
 
     local hook_command="$1"
     local start_command="${@:2}"
-    local cmd_path="${_socks_cli_socksify_tmp_path}/${hook_command}"
-    cat <<-EOF > "${cmd_path}"
-#!/bin/bash
-# maintain the PATH env to avoid endless loop
-export PATH="\$(socks_cli_replace "\$PATH" "${_socks_cli_socksify_path_preappend}" "")"
-"${SOCKS_CLI_DIR}/dsocks/socksify" ${start_command} "\$@"
-EOF
-    chmod +x "${cmd_path}"
+    if [ -z "$start_command" ]; then
+        start_command="${hook_command}"
+    fi
+    local cmd_shadow="${_socks_cli_socksify_tmp_path}/${hook_command}"
+    cat <<-EOF > "${cmd_shadow}"
+		#!/bin/bash
+		function _sed_escape() {
+		    echo "\$1" | sed -e 's/\\\\/\\\\\\\\/g; s/\\//\\\\\\//g; s/&/\\\\\\&/g'
+		}
+		function socks_cli_replace() {
+		    local search=\$(_sed_escape "\$2")
+		    local replace=\$(_sed_escape "\$3")
+		    echo "\$1" | sed "s/\${search}/\${replace}/g"
+		}
+		# remove the current folder from the PATH,
+		# to avoid recursively invoking this script.
+		export PATH="\$(socks_cli_replace "\$PATH" "${_socks_cli_socksify_path_preappend}" "")"
+		"${SOCKS_CLI_DIR}/dsocks/socksify" ${start_command} "\$@"
+	EOF
+    chmod +x "${cmd_shadow}"
 }

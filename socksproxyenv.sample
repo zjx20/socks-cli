@@ -45,15 +45,17 @@ LOAD_SUPPORT mvn
 # For example, to export FTP_PROXY:
 #   EXPORT_ENV FTP_PROXY "http://${SOCKS_CLI_HTTP_PROXY}"
 
-EXPORT_ENV FOO "this is an example of EXPORT_ENV and should be removed!"
+# EXPORT_ENV FOO "this is an example of EXPORT_ENV!"
 
 
 # However, not all program has built-in proxy support. To settle these
 # situations, dsocks (https://github.com/zjx20/dsocks) has been integrated
 # into socks-cli.
 #
-# *PLEASE NOTICE* that dsocks doesn't work well with system binaries on
-# macOS 10.11+ because of the SIP feature (a.k.a. System Integrity Protection).
+# *PLEASE NOTICE* that dsocks doesn't work for system binaries (e.g. /bin/*,
+# /usr/bin/*) on macOS 10.11+ because of the SIP (System Integrity Protection).
+# But it should still work with commands installed by package management tools
+# such as HomeBrew.
 
 # Uncomment the line "LOAD_SUPPORT dsocks" to enable the dsocks support.
 # "git" and "gcc" will be needed to bootstrap dsocks.
@@ -61,13 +63,16 @@ EXPORT_ENV FOO "this is an example of EXPORT_ENV and should be removed!"
 # LOAD_SUPPORT dsocks
 
 # And then use the SOCKSIFY DSL to define which command to be socksified.
-# For example:
+#
+# Uncomment any SOCKSIFY line to give a try:
+#
 #   # socksify the curl command
 #   SOCKSIFY curl
-#   # socksify the python command and use "/usr/bin/env python" to run python
-#   SOCKSIFY python  /usr/bin/env python
 #
-# After socksifying the "python" command, for example, you can run the
-# following code snippet to verify it:
+#   # specifying "/usr/bin/env python" as the entrypoint of the socksified cmd.
+#   SOCKSIFY python3  /usr/bin/env python3
 #
-#   python -c "import urllib2;print(urllib2.urlopen('http://fb.com/').read())"
+# Assume that you had socksified the "python3" command, you can check your
+# external ip by running:
+#
+#   python3 -c "import urllib.request as r;print(r.urlopen('https://ipinfo.io/').read().decode('utf-8'))"
