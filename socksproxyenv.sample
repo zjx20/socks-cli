@@ -69,8 +69,8 @@ LOAD_SUPPORT ssh
 #   # socksify the curl command
 #   SOCKSIFY curl
 #
-#   # specifying "/usr/bin/env python" as the entrypoint of the socksified cmd.
-#   SOCKSIFY python3  /usr/bin/env python3
+#   # the second form accepts extra parameters as the entrypoint of the cmd.
+#   SOCKSIFY python3  /opt/homebrew/bin/python3
 #
 # Assume that you had socksified the "python3" command, you can check your
 # external ip by running:
