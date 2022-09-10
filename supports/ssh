@@ -1,0 +1,4 @@
+#!/bin/bash
+# The shebang is just a hint for editors.
+
+SHADOW ssh "${SOCKS_CLI_DIR}/sh/socksified-ssh.sh"

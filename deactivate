@@ -1,19 +1,20 @@
 #!/bin/bash
 # The shebang is just a hint for editors.
 
-if [ "${_socks_cli}" = "1" ]; then
-    function _restore_var() {
-        if [ -n "$1" ]; then
-            local VAR="_socks_cli_saved_$1"
-            if _defined "${VAR}"; then
-                echo "export $1=\"\${${VAR}}\"; unset ${VAR}"
-            else
-                # Check if the variable really exists, for security.
-                # e.g. to avoid code injection or something else.
-                _defined "$1" && echo "unset $1"
-            fi
+function _restore_var() {
+    if [ -n "$1" ]; then
+        local VAR="_socks_cli_saved_$1"
+        if _defined "${VAR}"; then
+            echo "export $1=\"\${${VAR}}\"; unset ${VAR}"
+        else
+            # Check if the variable really exists, for security.
+            # e.g. to avoid code injection or something else.
+            _defined "$1" && echo "unset $1"
         fi
-    }
+    fi
+}
+
+if [ "${_socks_cli}" = "1" ]; then
 
     # Execute deactivation hooks
     for support in "${_socks_cli_supports[@]}"; do
@@ -24,7 +25,13 @@ if [ "${_socks_cli}" = "1" ]; then
     # Restore variables
     for var in "${_socks_cli_saved_vars[@]}"; do
         eval "$(_restore_var $var)"
+
+        # Rehash if PATH changed
+        if [ "$var" = "PATH" ]; then
+            hash -r
+        fi
     done
 
+    unset _socks_cli_shadow_inited
     unset _socks_cli
 fi

@@ -4,7 +4,7 @@
 function _logerror() {
     local RED='\033[0;31m'
     local NC='\033[0m'
-    echo $(echo -en "${RED}")"$@"$(echo -en "${NC}")
+    echo "$(echo -en "${RED}")$*$(echo -en "${NC}")"
 }
 
 # Determine the directory containing this script
@@ -37,8 +37,8 @@ fi
 SOCKS_CLI_DIR="$("${SOCKS_CLI_DIR}/py/py_wrapper" -c "import os,sys;print(os.path.abspath(sys.argv[1]))" "${SOCKS_CLI_DIR}")"
 
 declare -a _socks_cli_saved_vars=()
-declare -a _socks_cli_supports=()
 declare -a _socks_cli_export_vars=()
+declare -a _socks_cli_supports=()
 
 function _expand() {
     eval "(echo \"\${$1}\") 2>/dev/null"
@@ -67,6 +67,26 @@ function _contains() {
     for e in "${@:2}"; do [[ "$e" = "$1" ]] && return 0; done; return 1
 }
 
+function _clean_invalid_shadows() {
+    local tmp_path="${SOCKS_CLI_DIR}/tmp/shadows/"
+    [ ! -d "${tmp_path}" ] && return 0
+    # First pass: remove command shadows if the owning shell has been dead.
+    find "${tmp_path}" -name "_shell_pid" -print0 |
+        while IFS= read -r -d '' file; do
+            pid="$(tr -d '\n\r' < "${file}")"
+            if [ "${pid}" = "$$" ]; then
+                # Ignore the current shell
+                continue
+            fi
+            if ! pgrep -F "${file}" > /dev/null; then
+                find "$(dirname "${file}")" -type f -delete
+            fi
+        done
+
+    # Second pass: remove empty directories recursively.
+    find "${tmp_path}" -empty -type d -delete
+}
+
 function LOAD_SUPPORT() {
     if [ $# -lt 1 ]; then
         _logerror "Error: LOAD_SUPPORT() requires one parameter."
@@ -87,7 +107,7 @@ function LOAD_SUPPORT() {
 
 function EXPORT_ENV() {
     if [ $# -lt 2 ]; then
-        _logerror "Error: DEFINE_ENV() requires two parameters."
+        _logerror "Error: EXPORT_ENV() requires two parameters."
         return 1
     fi
     if _contains "$1" "${_socks_cli_export_vars[@]}" ; then
@@ -99,7 +119,58 @@ function EXPORT_ENV() {
     eval "export $1=\"$2\""
 }
 
+function SHADOW() {
+    if [ $# -lt 2 ]; then
+        _logerror "Error: SHADOW() requires at least two parameters."
+        return 1
+    fi
+
+    local shell_pid=$$
+    local tmp_path="${SOCKS_CLI_DIR}/tmp/shadows/${shell_pid}"
+    local path_preappend="${tmp_path}"
+    if [ -n "${PATH}" ]; then
+        path_preappend="${path_preappend}:"
+    fi
+
+    if [ "${_socks_cli_shadow_inited}" = "" ]; then
+        _clean_invalid_shadows
+
+        mkdir -p "${tmp_path}"
+        # Remove existing command shadows
+        [ -n "${tmp_path}" ] && find "${tmp_path}/" -type f -delete
+        echo "${shell_pid}" > "${tmp_path}/_shell_pid"
+
+        EXPORT_ENV PATH "${path_preappend}${PATH}"
+        _socks_cli_shadow_inited=1
+    fi
+
+    local shadow_name="$1"
+    local start_command="${@:2}"
+    local cmd_shadow="${tmp_path}/${shadow_name}"
+    cat <<-EOF > "${cmd_shadow}"
+		#!/bin/bash
+		function _sed_escape() {
+		    echo "\$1" | sed -e 's/\\\\/\\\\\\\\/g; s/\\//\\\\\\//g; s/&/\\\\\\&/g'
+		}
+		function _replace() {
+		    local search=\$(_sed_escape "\$2")
+		    local replace=\$(_sed_escape "\$3")
+		    echo "\$1" | sed "s/\${search}/\${replace}/g"
+		}
+		# remove the current folder from the PATH,
+		# to avoid recursively invoking this script.
+		export PATH="\$(_replace "\$PATH" "${path_preappend}" "")"
+		${start_command} "\$@"
+	EOF
+    chmod +x "${cmd_shadow}"
+}
+
 source "${SOCKS_CLI_DIR}/socksproxyenv"
+
+# Rehash executables if PATH has been changed
+if [[ " ${_socks_cli_export_vars[*]} " =~ " PATH " ]]; then
+    hash -r
+fi
 
 # Prompt that socks-cli is activated
 _save_var "PS1"
@@ -114,7 +185,7 @@ fi
 export PS1=$PS1_PREFIX$PS1
 
 _socks_cli=1
-echo "Done! Some environment variables have been changed to:"
+echo "Done! Environment variables have been changed to:"
 for var in "${_socks_cli_export_vars[@]}"; do
     echo "  $var=$(_expand "$var")"
 done

@@ -13,24 +13,37 @@ Here is an incomplete list of supported commands:
 * gem
 * npm
 * mvn
+* ssh
 * ...
 
 ## Usage
 
 1. Clone the code.
+	```bash
+	git clone https://github.com/zjx20/socks-cli.git
+	```
 
 2. Copy `socksproxyenv.sample` to `socksproxyenv`, and fill your socks5 server into it.
+	```bash
+	cd socks-cli
+	cp socksproxyenv.sample socksproxyenv
 
-3. Call `source socks-cli/activate` before your CLI commands:
+	# edit socksproxyenv, complete the line:
+	#   export SOCKS_PROXY=
+	```
+
+3. Invoke `source socks-cli/activate` before running your CLI commands:
 	```
 	$ source socks-cli/activate
 	Serving HTTP proxy on 127.0.0.1 port 54967 ...
-	Done! Some environment variables have been changed to:
+	Done! Variables or aliases have been changed to:
 	  GIT_PROXY_COMMAND=/Users/x/socks-git/sh/socksified-connect.sh
 	  GIT_SSH=/Users/x/socks-git/sh/socksified-ssh.sh
 	  ALL_PROXY=socks5h://127.0.0.1:1080
 	  HTTP_PROXY=http://127.0.0.1:54967
 	  HTTPS_PROXY=http://127.0.0.1:54967
+
+	# Following commands will use the socks proxy!
 
 	$ git clone git@github.com:git/git.git
 	Cloning into 'git'...
@@ -38,8 +51,12 @@ Here is an incomplete list of supported commands:
 	remote: Compressing objects: 100% (372/372), done.
 	Receiving objects 2.0% (1/213208), 620.00 KiB | 121.00 KiB/s
 	...
+
+	# Check your external IP!
+	$ curl ipinfo.io
+	...
 	```
 
-4. Optionally, you can call `source socks-cli/deactivate` to deactivate `socks-cli`.
+4. Optionally, you can invoke `source socks-cli/deactivate` to deactivate `socks-cli`.
 
 For more details, please see [socksproxyenv.sample](socksproxyenv.sample).

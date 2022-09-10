@@ -11,7 +11,7 @@
 #
 #    export SOCKS_PROXY="localhost:1080"
 #
-#  Alternatively, you can also do something complex, for example:
+#  Alternatively, you can also do something complicated, for example:
 #
 #    # Create a ssh tunnel on the fly
 #    PORT=1088
@@ -30,22 +30,22 @@ export SOCKS_PROXY=
 ###############################################################################
 
 # socks-cli has a few pluggable supports for various kinds of CLI commands.
-# You can disable some of them as you wish. For example, if you don't run git
-# command at all, you can just comment out the line "LOAD_SUPPORT git".
+# You can disable some of them as you wish. For example, if you don't want to
+# run the git command with the socks proxy, just remove "LOAD_SUPPORT git".
 
 LOAD_SUPPORT git
 LOAD_SUPPORT http
 LOAD_SUPPORT wget
 LOAD_SUPPORT mvn
+LOAD_SUPPORT ssh
 
 
 # Further more, you can extend socks-cli to support more CLI commands, by
 # exporting dedicated variables with the "EXPORT_ENV" DSL. socks-cli will take
 # care of these variables as well.
-# For example, to export FTP_PROXY:
-#   EXPORT_ENV FTP_PROXY "http://${SOCKS_CLI_HTTP_PROXY}"
 
-# EXPORT_ENV FOO "this is an example of EXPORT_ENV!"
+# Uncomment to export FTP_PROXY:
+#   EXPORT_ENV FTP_PROXY "http://${SOCKS_CLI_HTTP_PROXY}"
 
 
 # However, not all program has built-in proxy support. To settle these
