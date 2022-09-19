@@ -55,7 +55,6 @@ Modifications made by Anorov (https://github.com/Anorov)
 """
 
 from base64 import b64encode
-from collections import Callable
 from errno import EOPNOTSUPP, EINVAL, EAGAIN
 import functools
 from io import BytesIO
@@ -65,6 +64,12 @@ from os import SEEK_CUR
 import socket
 import struct
 import sys
+
+try:
+    # python < 3.3
+    from collections import Callable
+except ImportError:
+    from collections.abc import Callable
 
 __version__ = "1.6.7"
 

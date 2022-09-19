@@ -455,6 +455,9 @@ class ThreadedHTTPServer(ThreadingMixIn, TCPServer):
     # Settings from TCPServer
     allow_reuse_address = True
 
+    # Listen backlog, default to 5 which is too low
+    request_queue_size = 256
+
 
 def runProxyServer(config):
     try:
