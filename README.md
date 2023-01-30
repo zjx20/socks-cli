@@ -33,7 +33,7 @@ Here is an incomplete list of supported commands:
 	```
 
 3. Invoke `source socks-cli/activate` before running your CLI commands:
-	```
+	```bash
 	$ source socks-cli/activate
 	Serving HTTP proxy on 127.0.0.1 port 54967 ...
 	Done! Variables or aliases have been changed to:
@@ -60,3 +60,18 @@ Here is an incomplete list of supported commands:
 4. Optionally, you can invoke `source socks-cli/deactivate` to deactivate `socks-cli`.
 
 For more details, please see [socksproxyenv.sample](socksproxyenv.sample).
+
+### One-Shot Mode
+
+The usage described above affects all commands in the terminal session. If you wish to temporarily enable the socks proxy for only a particular command, you can use the `socksify` script. (Note: You still need to configure the `socksproxyenv` file first.)
+
+```bash
+# make a symlink to PATH
+ln -s /path/to/socks-cli/socksify /usr/local/bin/socksify
+
+# or make an alias
+alias socksify='/path/to/socks-cli/socksify'
+
+# enable for one-shot
+socksify curl ipinfo.io
+```

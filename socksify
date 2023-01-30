@@ -1,0 +1,5 @@
+#!/bin/bash
+
+BASE="$(dirname "$(readlink -f "$0")")"
+source "$BASE/activate" > /dev/null
+exec "$@"
