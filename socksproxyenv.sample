@@ -38,6 +38,7 @@ LOAD_SUPPORT http
 LOAD_SUPPORT wget
 LOAD_SUPPORT mvn
 LOAD_SUPPORT ssh
+LOAD_SUPPORT scp
 
 
 # Further more, you can extend socks-cli to support more CLI commands, by

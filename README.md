@@ -14,6 +14,7 @@ Here is an incomplete list of supported commands:
 * npm
 * mvn
 * ssh
+* scp
 * ...
 
 ## Usage
