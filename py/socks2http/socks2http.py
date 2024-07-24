@@ -3,7 +3,6 @@
 
 import argparse
 import base64
-import shutil
 import signal
 import socket
 import select
@@ -12,7 +11,7 @@ import errno
 import os
 import sys
 
-from SocksiPy import socks
+from socks5 import create_connection
 
 try:
     from cStringIO import StringIO
@@ -267,12 +266,12 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
                 auth = base64.b64encode(auth.encode("utf-8")).decode("utf-8")
                 headers["authorization"] = "Basic " + auth
         if SOCKS5_PROXY:
-            sock = socks.socksocket()
             if port is None:
                 port = 80
                 if pieces.scheme.lower() == "https":
                     port = 443
-            sock.connect((host, int(port)))
+            sock = create_connection((host, int(port)),
+                                     SOCKS5_PROXY[0]+":"+str(SOCKS5_PROXY[1]))
             conn.sock = sock
         cl = int(self.headers.get("content-length", "0"))
         body = None
@@ -371,12 +370,12 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler, object):
     def do_CONNECT(self):
         host, port = (self.path.split(":") + ["80"])[:2]
         port = int(port)
+        proxy = None
         if SOCKS5_PROXY:
-            sock = socks.socksocket()
-        else:
-            sock = socket.socket()
+            proxy = SOCKS5_PROXY[0] + ":" + str(SOCKS5_PROXY[1])
+        sock = None
         try:
-            sock.connect((host, port))
+            sock = create_connection((host, port), proxy)
         except Exception as e:
             msg = str(e)
             return self.send_error(400, msg)
@@ -474,7 +473,6 @@ def runProxyServer(config):
     if config.socks5_server:
         SOCKS5_PROXY = (config.socks5_server.split(":") + ["1080"])[:2]
         SOCKS5_PROXY[1] = int(SOCKS5_PROXY[1])
-        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, *SOCKS5_PROXY)
 
     server_address = (config.bind, config.port)
     httpd = ThreadedHTTPServer(server_address, ProxyHTTPRequestHandler)
