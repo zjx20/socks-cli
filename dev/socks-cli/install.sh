@@ -55,10 +55,9 @@ else
 fi
 
 # Generate socksproxyenv.
-# SOCKS_PROXY is expected to be injected via devcontainer.json "remoteEnv" / "containerEnv".
-# The file is sourced at activation time, so ${SOCKS_PROXY} is evaluated then.
+# SOCKS_CLI_SOCKS_PROXY is expected to be injected via devcontainer.json "remoteEnv" / "containerEnv".
 cat > "$INSTALL_DIR/socksproxyenv" << 'EOF'
-export SOCKS_PROXY="${SOCKS_PROXY}"
+export SOCKS_PROXY="${SOCKS_CLI_SOCKS_PROXY}"
 LOAD_SUPPORT git
 LOAD_SUPPORT http
 LOAD_SUPPORT wget
@@ -76,7 +75,7 @@ alias scd='source /opt/socks-cli/deactivate'
 alias sf='/opt/socks-cli/socksify'
 
 if [ -n "${SOCKS_CLI_AUTO_ACTIVATE}" ] && [ "${_socks_cli}" != "1" ]; then
-    source /opt/socks-cli/activate
+    source /opt/socks-cli/activate > /dev/null
 fi
 PROFILE
 chmod 644 /etc/profile.d/socks-cli.sh

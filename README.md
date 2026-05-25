@@ -88,11 +88,11 @@ socksify curl ipinfo.io
     ```jsonc
     {
         "features": {
-            "ghcr.io/zjx20/socks-cli/socks-proxy:1": {}
+            "ghcr.io/zjx20/socks-cli/socks-cli:1": {}
         },
         "containerEnv": {
-            // e.g. an SSH tunnel forwarded to the container host
-            "SOCKS_PROXY": "localhost:1080"
+            // e.g. an SOCKS5 proxy accessible from container
+            "SOCKS_CLI_SOCKS_PROXY": "192.168.10.1:1080"
         }
     }
     ```
@@ -114,10 +114,10 @@ Set `SOCKS_CLI_AUTO_ACTIVATE` to any non-empty value and `socks-cli` will activa
 ```jsonc
 {
     "features": {
-        "ghcr.io/zjx20/socks-cli/socks-proxy:1": {}
+        "ghcr.io/zjx20/socks-cli/socks-cli:1": {}
     },
     "containerEnv": {
-        "SOCKS_PROXY": "localhost:1080",
+        "SOCKS_CLI_SOCKS_PROXY": "192.168.10.1:1080",
         "SOCKS_CLI_AUTO_ACTIVATE": "1"
     }
 }
@@ -136,7 +136,7 @@ Example — pin to a specific tag:
 ```jsonc
 {
     "features": {
-        "ghcr.io/zjx20/socks-cli/socks-proxy:1": {
+        "ghcr.io/zjx20/socks-cli/socks-cli:1": {
             "version": "v1.2.3"
         }
     }
