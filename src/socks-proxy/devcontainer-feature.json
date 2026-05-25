@@ -1,0 +1,19 @@
+{
+    "id": "socks-proxy",
+    "version": "1.0.0",
+    "name": "SOCKS Proxy CLI (socks-cli)",
+    "description": "Installs socks-cli and configures shell aliases (sca/scd). Inject SOCKS_PROXY via devcontainer.json to set the proxy server.",
+    "documentationURL": "https://github.com/zjx20/socks-cli",
+    "options": {
+        "version": {
+            "type": "string",
+            "proposals": ["latest"],
+            "default": "latest",
+            "description": "Git ref (branch, tag, or commit) of socks-cli to install"
+        }
+    },
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/common-utils"
+    ],
+    "keywords": ["socks", "proxy", "cli", "network"]
+}

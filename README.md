@@ -76,3 +76,69 @@ alias socksify='/path/to/socks-cli/socksify'
 # enable for one-shot
 socksify curl ipinfo.io
 ```
+
+## Dev Container Feature
+
+`socks-cli` is available as a [Dev Container Feature](https://containers.dev/implementors/features/), hosted on GHCR. It installs `socks-cli` automatically and provides the `sca` / `scd` shell aliases out of the box.
+
+### Setup
+
+1. Add the feature to your `.devcontainer/devcontainer.json` and inject your SOCKS5 proxy via `containerEnv`:
+
+    ```jsonc
+    {
+        "features": {
+            "ghcr.io/zjx20/socks-cli/socks-proxy:1": {}
+        },
+        "containerEnv": {
+            // e.g. an SSH tunnel forwarded to the container host
+            "SOCKS_PROXY": "localhost:1080"
+        }
+    }
+    ```
+
+2. Rebuild the container. `socks-cli` is installed to `/opt/socks-cli` and the two aliases are ready in your shell.
+
+### Aliases
+
+| Alias | Action |
+|-------|--------|
+| `sca` | `source /opt/socks-cli/activate` — enable the SOCKS proxy for the current shell session |
+| `scd` | `source /opt/socks-cli/deactivate` — disable the proxy and restore original environment |
+| `sf`  | `/opt/socks-cli/socksify` — one-shot proxy, e.g. `sf curl ipinfo.io` |
+
+### Auto-activation
+
+Set `SOCKS_CLI_AUTO_ACTIVATE` to any non-empty value and `socks-cli` will activate automatically every time a shell starts:
+
+```jsonc
+{
+    "features": {
+        "ghcr.io/zjx20/socks-cli/socks-proxy:1": {}
+    },
+    "containerEnv": {
+        "SOCKS_PROXY": "localhost:1080",
+        "SOCKS_CLI_AUTO_ACTIVATE": "1"
+    }
+}
+```
+
+You can still run `scd` at any point to deactivate for the current session.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `version` | `latest` | Git ref (branch, tag, or commit SHA) of socks-cli to install |
+
+Example — pin to a specific tag:
+
+```jsonc
+{
+    "features": {
+        "ghcr.io/zjx20/socks-cli/socks-proxy:1": {
+            "version": "v1.2.3"
+        }
+    }
+}
+```
