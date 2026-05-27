@@ -23,9 +23,31 @@ _install_pkgs() {
     fi
 }
 
+_pkg_name() {
+    local cmd="$1"
+
+    case "$cmd" in
+        pgrep)
+            if command -v apt-get &>/dev/null; then
+                echo "procps"
+            elif command -v apk &>/dev/null; then
+                echo "procps"
+            elif command -v dnf &>/dev/null || command -v yum &>/dev/null; then
+                echo "procps-ng"
+            else
+                echo "procps"
+            fi
+            ;;
+        *)
+            echo "$cmd"
+            ;;
+    esac
+}
+
 MISSING=()
-command -v curl    &>/dev/null || MISSING+=(curl)
-command -v python3 &>/dev/null || MISSING+=(python3)
+command -v curl    &>/dev/null || MISSING+=("$(_pkg_name curl)")
+command -v python3 &>/dev/null || MISSING+=("$(_pkg_name python3)")
+command -v pgrep   &>/dev/null || MISSING+=("$(_pkg_name pgrep)")
 
 if [ ${#MISSING[@]} -gt 0 ]; then
     _install_pkgs "${MISSING[@]}"
