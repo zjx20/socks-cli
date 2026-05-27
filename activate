@@ -68,7 +68,7 @@ function _contains() {
 }
 
 function _clean_invalid_shadows() {
-    local tmp_path="/tmp/sockscli_${USER}/shadows/"
+    local tmp_path="/tmp/sockscli_${UID}/shadows/"
     [ ! -d "${tmp_path}" ] && return 0
     # First pass: remove command shadows if the owning shell has been dead.
     find "${tmp_path}" -name "_shell_pid" -print0 |
@@ -126,7 +126,7 @@ function SHADOW() {
     fi
 
     local shell_pid=$$
-    local tmp_path="/tmp/sockscli_${USER}/shadows/${shell_pid}"
+    local tmp_path="/tmp/sockscli_${UID}/shadows/${shell_pid}"
     local path_preappend="${tmp_path}"
     if [ -n "${PATH}" ]; then
         path_preappend="${path_preappend}:"
