@@ -59,8 +59,8 @@ REF="${VERSION:-master}"
 URL="https://github.com/zjx20/socks-cli/archive/${REF}.tar.gz"
 
 CURL_PROXY_OPTS=()
-if [ -n "${SOCKS_PROXY}" ]; then
-    CURL_PROXY_OPTS=(--proxy "socks5h://${SOCKS_PROXY}")
+if [ -n "${SOCKS_CLI_SOCKS_PROXY}" ]; then
+    CURL_PROXY_OPTS=(--proxy "socks5h://${SOCKS_CLI_SOCKS_PROXY}")
 fi
 
 mkdir -p "$INSTALL_DIR"
