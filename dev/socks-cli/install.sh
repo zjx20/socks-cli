@@ -44,6 +44,11 @@ _pkg_name() {
     esac
 }
 
+_shell_quote() {
+    local value="$1"
+    printf "'%s'" "${value//\'/\'\\\'\'}"
+}
+
 MISSING=()
 command -v curl    &>/dev/null || MISSING+=("$(_pkg_name curl)")
 command -v python3 &>/dev/null || MISSING+=("$(_pkg_name python3)")
@@ -77,7 +82,6 @@ else
 fi
 
 # Generate socksproxyenv.
-# SOCKS_CLI_SOCKS_PROXY is expected to be injected via devcontainer.json "remoteEnv" / "containerEnv".
 cat > "$INSTALL_DIR/socksproxyenv" << 'EOF'
 export SOCKS_PROXY="${SOCKS_CLI_SOCKS_PROXY}"
 LOAD_SUPPORT git
@@ -90,21 +94,14 @@ EOF
 
 chmod -R 755 "$INSTALL_DIR"
 
-# Write aliases + auto-activation to a profile.d script (picked up by bash/sh login shells)
-cat > /etc/profile.d/socks-cli.sh << 'PROFILE'
-alias sca='source /opt/socks-cli/activate'
-alias scd='source /opt/socks-cli/deactivate'
-alias sf='/opt/socks-cli/socksify'
+# Persist the feature options for later shells.
+SOCKS_CLI_SOCKS_PROXY_QUOTED="$(_shell_quote "${SOCKS_CLI_SOCKS_PROXY:-}")"
+SOCKS_CLI_AUTO_ACTIVATE_QUOTED="$(_shell_quote "${SOCKS_CLI_AUTO_ACTIVATE:-}")"
 
-if [ -n "${SOCKS_CLI_AUTO_ACTIVATE}" ] && [ "${_socks_cli}" != "1" ]; then
-    source /opt/socks-cli/activate > /dev/null
-fi
-PROFILE
-chmod 644 /etc/profile.d/socks-cli.sh
+SHELL_SNIPPET=$(cat <<'SNIPPET'
+export SOCKS_CLI_SOCKS_PROXY=__SOCKS_CLI_SOCKS_PROXY__
+export SOCKS_CLI_AUTO_ACTIVATE=__SOCKS_CLI_AUTO_ACTIVATE__
 
-SHELL_SNIPPET=$(cat << 'SNIPPET'
-
-# socks-cli: sca=activate, scd=deactivate, sf=one-shot
 alias sca='source /opt/socks-cli/activate'
 alias scd='source /opt/socks-cli/deactivate'
 alias sf='/opt/socks-cli/socksify'
@@ -115,6 +112,14 @@ if [ -n "${SOCKS_CLI_AUTO_ACTIVATE}" ] && [ "${_socks_cli}" != "1" ]; then
 fi
 SNIPPET
 )
+SHELL_SNIPPET="${SHELL_SNIPPET/__SOCKS_CLI_SOCKS_PROXY__/${SOCKS_CLI_SOCKS_PROXY_QUOTED}}"
+SHELL_SNIPPET="${SHELL_SNIPPET/__SOCKS_CLI_AUTO_ACTIVATE__/${SOCKS_CLI_AUTO_ACTIVATE_QUOTED}}"
+
+# Write aliases + auto-activation to a profile.d script (picked up by bash/sh login shells)
+cat > /etc/profile.d/socks-cli.sh <<PROFILE
+${SHELL_SNIPPET}
+PROFILE
+chmod 644 /etc/profile.d/socks-cli.sh
 
 # /etc/bash.bashrc is sourced for interactive non-login bash shells (e.g. most terminals in devcontainers)
 if [ -f /etc/bash.bashrc ]; then

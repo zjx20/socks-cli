@@ -83,16 +83,27 @@ socksify curl ipinfo.io
 
 ### Setup
 
-1. Add the feature to your `.devcontainer/devcontainer.json` and inject your SOCKS5 proxy via `containerEnv`:
+1. Add the feature to your `.devcontainer/devcontainer.json` and pass the SOCKS settings as feature options:
 
     ```jsonc
     {
         "features": {
-            "ghcr.io/zjx20/socks-cli/socks-cli:1": {}
-        },
-        "containerEnv": {
-            // e.g. an SOCKS5 proxy accessible from container
-            "SOCKS_CLI_SOCKS_PROXY": "192.168.10.1:1080"
+            "ghcr.io/zjx20/socks-cli/socks-cli:1": {
+                // e.g. a SOCKS5 proxy accessible from the container
+                "SOCKS_CLI_SOCKS_PROXY": "192.168.10.1:1080"
+            }
+        }
+    }
+    ```
+
+   If your SOCKS proxy runs on the host machine, `host.docker.internal` is usually the easiest way to reach it from the container:
+
+    ```jsonc
+    {
+        "features": {
+            "ghcr.io/zjx20/socks-cli/socks-cli:1": {
+                "SOCKS_CLI_SOCKS_PROXY": "host.docker.internal:1080"
+            }
         }
     }
     ```
@@ -114,11 +125,10 @@ Set `SOCKS_CLI_AUTO_ACTIVATE` to any non-empty value and `socks-cli` will activa
 ```jsonc
 {
     "features": {
-        "ghcr.io/zjx20/socks-cli/socks-cli:1": {}
-    },
-    "containerEnv": {
-        "SOCKS_CLI_SOCKS_PROXY": "192.168.10.1:1080",
-        "SOCKS_CLI_AUTO_ACTIVATE": "1"
+        "ghcr.io/zjx20/socks-cli/socks-cli:1": {
+            "SOCKS_CLI_SOCKS_PROXY": "192.168.10.1:1080",
+            "SOCKS_CLI_AUTO_ACTIVATE": "1"
+        }
     }
 }
 ```
@@ -130,6 +140,8 @@ You can still run `scd` at any point to deactivate for the current session.
 | Option | Default | Description |
 |--------|---------|-------------|
 | `version` | `latest` | Git ref (branch, tag, or commit SHA) of socks-cli to install |
+| `SOCKS_CLI_SOCKS_PROXY` | empty | SOCKS5 proxy host and port used by `activate` and the installer download fallback |
+| `SOCKS_CLI_AUTO_ACTIVATE` | empty | Any non-empty value enables automatic activation for new shells |
 
 Example — pin to a specific tag:
 

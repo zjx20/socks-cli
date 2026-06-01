@@ -1,8 +1,8 @@
 {
     "id": "socks-cli",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "name": "SOCKS Proxy CLI (socks-cli)",
-    "description": "Installs socks-cli and configures shell aliases (sca/scd). Inject SOCKS_PROXY via devcontainer.json to set the proxy server.",
+    "description": "Installs socks-cli and configures shell aliases (sca/scd). Configure SOCKS_CLI_SOCKS_PROXY and SOCKS_CLI_AUTO_ACTIVATE via devcontainer feature options.",
     "documentationURL": "https://github.com/zjx20/socks-cli",
     "options": {
         "version": {
@@ -10,6 +10,16 @@
             "proposals": ["latest"],
             "default": "latest",
             "description": "Git ref (branch, tag, or commit) of socks-cli to install"
+        },
+        "SOCKS_CLI_SOCKS_PROXY": {
+            "type": "string",
+            "default": "",
+            "description": "SOCKS5 proxy host and port, for example 192.168.10.1:1080"
+        },
+        "SOCKS_CLI_AUTO_ACTIVATE": {
+            "type": "string",
+            "default": "",
+            "description": "Set to any non-empty value to auto-activate socks-cli in new shells"
         }
     },
     "installsAfter": [
